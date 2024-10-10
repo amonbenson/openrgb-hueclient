@@ -1,12 +1,14 @@
 import time
+import logging
 import threading
 from openrgb import OpenRGBClient as _OpenRGBClient
 from openrgb.utils import RGBColor
 
 class OpenRGBClient:
-    def __init__(self, host: str = "127.0.0.1", port: int = 6742, *, update_rate: int = 10, transition_speed: float = 1.0):
+    def __init__(self, host: str = "127.0.0.1", port: int = 6742, *, reconnect_attempts: int = 10, update_rate: int = 10, transition_speed: float = 1.0):
         self._host = host
         self._port = port
+        self._reconnect_attempts = reconnect_attempts
         self._update_rate = update_rate
 
         self._thread = threading.Thread(target=self._run)
@@ -21,8 +23,24 @@ class OpenRGBClient:
         self._transition_speed = transition_speed
 
     def _run(self):
-        client = _OpenRGBClient(self._host, self._port)
-        client.connect()
+        # try to connect a few times
+        client = None
+        for _ in range(self._reconnect_attempts):
+            if self._stop_event.is_set():
+                break
+
+            try:
+                client = _OpenRGBClient(self._host, self._port)
+                client.connect()
+                break
+            except Exception as e:
+                logging.error(f"Failed to connect to OpenRGB: {e}")
+
+            self._stop_event.wait(1)
+
+        if client is None:
+            logging.error("Too many connection attempts, exiting...")
+            return
 
         # get all zones from all devices that support direct updating
         zones = [zone for device in client.ee_devices for zone in device.zones]

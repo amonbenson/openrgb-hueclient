@@ -21,6 +21,7 @@ if __name__ == "__main__":
     openrgb = OpenRGBClient(
         host=os.environ["OPENRGB_HOST"],
         port=int(os.environ["OPENRGB_PORT"]),
+        reconnect_attempts=120,
         update_rate=10,
     )
 
