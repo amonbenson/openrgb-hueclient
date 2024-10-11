@@ -5,7 +5,7 @@ from openrgb import OpenRGBClient as _OpenRGBClient
 from openrgb.utils import RGBColor
 
 class OpenRGBClient:
-    def __init__(self, host: str = "127.0.0.1", port: int = 6742, *, reconnect_attempts: int = 10, update_rate: int = 10, transition_speed: float = 1.0):
+    def __init__(self, host: str = "127.0.0.1", port: int = 6742, *, reconnect_attempts: int = 10, update_rate: int = 20, transition_speed: float = 1.0):
         self._host = host
         self._port = port
         self._reconnect_attempts = reconnect_attempts
@@ -72,7 +72,7 @@ class OpenRGBClient:
 
             # show changes
             for zone in zones:
-                zone.show()
+                zone.show(fast=True)
 
             # wait for next update
             self._stop_event.wait(1 / self._update_rate)

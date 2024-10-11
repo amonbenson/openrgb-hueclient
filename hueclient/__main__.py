@@ -22,7 +22,6 @@ if __name__ == "__main__":
         host=os.environ["OPENRGB_HOST"],
         port=int(os.environ["OPENRGB_PORT"]),
         reconnect_attempts=120,
-        update_rate=10,
     )
 
     def update_lights(states: dict):
