@@ -1,60 +1,54 @@
 # openrgb-hueclient
-Basic Python script for syncing a Philips Hue Room to OpenRGB.
+Basic Python script for syncing your PC's RGB lighting with your Philips Hue lights.
 
 Note that this script is Windows only.
 
-## Setup
+## Prerequisites
 
-### Install Python
+### Setup OpenRGB
+
+You need to install OpenRGB. You can get the latest version from [here](https://openrgb.org/releases.html).
+
+You also need to make a few adjustments to the OpenRGB settings:
+- Navigate to `Settings` > `General` and enable `Start At Login`, `Start Minimized`, and `Start Server`.
+- Navigate to `Settings` > `Plugins` and disable the `OpenRGB Effects Plugin` (if installed).
+- Navigate to `SDK Server` and click `Start Server`.
+
+### Setup Python
 
 You need to install Python 3.9 or higher. You can get the latest Python Version from the [Microsoft Store](https://apps.microsoft.com/detail/9nrwmjp3717k).
 
-### Setup the Script
+## Install
 
-Open a powershell window and run the setup script:
+Open a powershell window and run following commands:
 
 ```powershell
 cd C:\path\to\openrgb-hueclient
-.\setup.ps1
+.\scripts\install.ps1
 ```
 
-### Obtain a Philips Hue username/hue-application-key
+This will:
+- Setup a python virtual environment at `.venv`
+- Install all required python packages
+- Connect to your Hue Bridge and ask you to press the button on the bridge
+- Connect to OpenRGB
+- Store all credentials in a file called `.env`
+- Register a scheduled task that runs the script when you log in
+- Start the script
 
-Visit `https://<your-hue-bridge-ip>/debug/clip.html`. Enter the following values:
+If everything worked, you should now see the lights on your PC change colors to match your selected Hue Room.
 
-- URL: `/api`
-- Headers: _(leave empty)_
-- Message Body:
-```json
-{
-    "devicetype": "openrgb-hueclient#00:00:00:00:00:00",
-    "generateclientkey": true
-}
-```
+## Uninstall
 
-If you want to, you can replace `openrgb-hueclient#00:00:00:00:00:00` with any other name and your PC's MAC address. Now press the physical Link button on your Hue Bridge and then hit the `POST` button on the website. In the Command Response, you will see something like this:
-
-```json
-[
-    {
-        "success": {
-            "username": "<your-username>",
-            "clientkey": "<your-client-key>"
-        }
-    }
-]
-```
-
-Note down these values, as you will need them in the next step.
-
-### Start the Script
-
-Copy the `.env.example` file to `.env` and fill in `BRIDGE_IP`, `BRIDGE_USERNAME` (from the previous step), and the `BRIDGE_ROOM` you want to sync. If your OpenRGB instance is running on a different PC, you will also need to fill in the `OPENRGB_HOST` and `OPENRGB_PORT` of that PC. Make sure that your Philips Hue Bridge and OpenRGB are running and that the OpenRGB SDK is enabled (`SDK Server` -> `Start Server`). You can now start the script by running:
+Open a powershell window and run following commands:
 
 ```powershell
-.\run.ps1
+cd C:\path\to\openrgb-hueclient
+.\scripts\uninstall.ps1
 ```
 
-### Autostart
+This will:
+- Stop the script if it is running
+- Remove the scheduled task
 
-TODO
+The virtual environment and `.env` file will stay in place. If you want to completely reset the application, you can delete the `.venv` folder and the `.env` file. Note that you will need to pair with the Hue Bridge again if you do this.

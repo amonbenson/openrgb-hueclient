@@ -19,7 +19,7 @@ Write-Host "Script path: $scriptPath"
 $scriptCwd = Split-Path -Path $scriptPath -Parent
 Write-Host "Script CWD: $scriptCwd"
 $action = New-ScheduledTaskAction -Execute 'wscript.exe' -Argument $scriptPath -WorkingDirectory $scriptCwd
-$trigger = New-ScheduledTaskTrigger -AtStartup
+$trigger = New-ScheduledTaskTrigger -AtLogOn
 $trigger.Delay = 'PT30S' # 30 seconds delay
 
 # register new task

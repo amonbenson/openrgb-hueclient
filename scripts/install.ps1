@@ -36,7 +36,7 @@ if (-not (Test-Path -Path '.env')) {
     }
     Write-Host "Successfully registered with the Hue Bridge."
 
-    $bridgeRoom = Read-Host -Prompt 'Enter the name of the room you want to observe'
+    $bridgeRoom = Read-Host -Prompt 'Enter the name of the room you want to sync'
 
     $openrgbHost = Read-Host -Prompt 'Enter the IP address of your OpenRGB server (default: "localhost")'
     if (-not $openrgbHost) {
