@@ -55,7 +55,7 @@ class OpenRGBClient:
 
             with self._lock:
                 # update transition progess
-                self._transition_progress += self._transition_speed / self._update_rate
+                self._transition_progress += 1 / (self._transition_speed * self._update_rate)
                 if self._transition_progress >= 1.0:
                     self._transition_progress = 1.0
                     self._transition_running = False
