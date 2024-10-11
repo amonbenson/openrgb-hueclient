@@ -126,3 +126,25 @@ class HueBridge():
 
     def on_update(self, callback):
         self._update_callback = callback
+
+    @staticmethod
+    def register(ip: str, device_name: str, device_mac: str, link_attempts: int = 60) -> dict:
+        requests.packages.urllib3.disable_warnings(category=requests.packages.urllib3.exceptions.InsecureRequestWarning)
+
+        for _ in range(link_attempts):
+            response = requests.post(f"https://{ip}/api", json={
+                "devicetype": f"{device_name}#{device_mac}",
+                "generateclientkey": True,
+            }, verify=False)
+            response.raise_for_status()
+            data = response.json()[0]
+
+            if "success" in data:
+                return data["success"]
+            elif "error" in data:
+                if data["error"]["type"] == 101:
+                    logging.debug("Link button not pressed, retrying...")
+                else:
+                    raise ValueError(f"Link failed: {data['error']['description']}")
+
+            time.sleep(1)
