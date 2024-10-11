@@ -1,11 +1,12 @@
 import time
 import logging
 import threading
+import random
 from openrgb import OpenRGBClient as _OpenRGBClient
 from openrgb.utils import RGBColor
 
 class OpenRGBClient:
-    def __init__(self, host: str = "127.0.0.1", port: int = 6742, *, reconnect_attempts: int = 10, update_rate: int = 20, transition_speed: float = 1.0):
+    def __init__(self, host: str = "127.0.0.1", port: int = 6742, *, reconnect_attempts: int = 10, update_rate: int = 20, transition_speed: float = 0.5):
         self._host = host
         self._port = port
         self._reconnect_attempts = reconnect_attempts
@@ -19,6 +20,7 @@ class OpenRGBClient:
         self._colors: list[RGBColor] = []
         self._lock = threading.Lock()
 
+        self._transition_running = False
         self._transition_progress = 0.0
         self._transition_speed = transition_speed
 
@@ -46,19 +48,27 @@ class OpenRGBClient:
         zones = [zone for device in client.ee_devices for zone in device.zones]
 
         while not self._stop_event.is_set():
-            with self._lock:
-                # update color transition
-                for i, (from_color, to_color) in enumerate(zip(self._from_colors, self._to_colors)):
-                    self._transition_progress += self._transition_speed / self._update_rate
+            # skip if no transition is running
+            if not self._transition_running:
+                time.sleep(1 / self._update_rate)
+                continue
 
-                    if self._transition_progress >= 1.0:
-                        self._transition_progress = 1.0
-                        self._colors[i] = to_color
-                    else:
+            with self._lock:
+                # update transition progess
+                self._transition_progress += self._transition_speed / self._update_rate
+                if self._transition_progress >= 1.0:
+                    self._transition_progress = 1.0
+                    self._transition_running = False
+
+                # update colors
+                for i, (from_color, to_color) in enumerate(zip(self._from_colors, self._to_colors)):
+                    if self._transition_running:
                         r = int(from_color.red + (to_color.red - from_color.red) * self._transition_progress)
                         g = int(from_color.green + (to_color.green - from_color.green) * self._transition_progress)
                         b = int(from_color.blue + (to_color.blue - from_color.blue) * self._transition_progress)
                         self._colors[i] = RGBColor(r, g, b)
+                    else:
+                        self._colors[i] = to_color
 
                 # update zones
                 for i, zone in enumerate(zones):
@@ -70,12 +80,12 @@ class OpenRGBClient:
 
                     zone.set_color(color, fast=True)
 
-            # show changes
-            for zone in zones:
-                zone.show(fast=True)
+                # show changes
+                for zone in zones:
+                    zone.show(fast=True)
 
             # wait for next update
-            self._stop_event.wait(1 / self._update_rate)
+            time.sleep(1 / self._update_rate)
 
     def start(self):
         self._thread.start()
@@ -88,8 +98,13 @@ class OpenRGBClient:
         self._stop_event.set()
         self._thread.join()
 
-    def set_colors(self, next_colors: list[RGBColor]):
+    def set_colors(self, next_colors: list[RGBColor], *, randomize: bool = False):
         with self._lock:
+            # randomize next_colors
+            if randomize and next_colors:
+                next_colors = next_colors.copy()
+                random.shuffle(next_colors)
+
             # set to colors
             self._to_colors = next_colors
 
@@ -104,6 +119,7 @@ class OpenRGBClient:
 
             # reset progress
             self._transition_progress = 0.0
+            self._transition_running = True
 
     def clear_colors(self):
         self.set_colors([])

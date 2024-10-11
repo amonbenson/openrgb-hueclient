@@ -36,7 +36,7 @@ if __name__ == "__main__":
                 print(f"Light '{state['metadata']['name']}': {e}")
 
         # set the colors on the OpenRGB client
-        openrgb.set_colors(colors)
+        openrgb.set_colors(colors, randomize=True)
 
     bridge.on_update(update_lights)
 
